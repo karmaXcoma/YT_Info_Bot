@@ -1,5 +1,6 @@
 import requests
 from datetime import datetime
+from typing import Union
 
 from utils import truncate_text
 from lexicon import LEXICON_RU
@@ -72,7 +73,7 @@ YT_TOPICS_ID = {'/m/04rlf': 'Music',
                 '/m/098wr': 'Society'}
 
 
-def get_last_videos_text(uploads: str, max_results: int = 3) -> str:
+def get_last_videos(uploads: str, max_results: int = 3) -> Union[list[dict], False]:
     max_results = min(max_results, 50)
     r_videos = requests.get(
         url=YT_PLAYLIST_ITEMS_API_URL,
@@ -87,14 +88,19 @@ def get_last_videos_text(uploads: str, max_results: int = 3) -> str:
     r_videos = r_videos.json()
 
     if 'items' not in r_videos:
-        return ''
+        return []
 
-    videos = r_videos['items']
+    return r_videos['items']
+
+
+def get_last_videos_text(last_videos: list[dict]) -> str:
+    if not last_videos:
+        return ''
 
     last_videos_title = '✨ <b>последние видео:</b>\n'
     last_videos_units = []
 
-    for video in videos:
+    for video in last_videos:
         video_title = truncate_text(video['snippet']['title'], 45)
         last_videos_units.append(
             f'📆 {datetime.fromisoformat(video["contentDetails"]["videoPublishedAt"]).strftime("%d.%m.%Y")} '
@@ -150,12 +156,19 @@ def get_channel_properties(channel_id: str) -> bool | dict:
     return channel_properties
 
 
-def get_channel_text(channel_properties: dict) -> bool | str:
+def get_channel_info(channel_properties: dict) -> bool | dict:
 
     if not channel_properties:
         return False
 
-    last_videos_text = get_last_videos_text(uploads=channel_properties['uploads'])
+    last_videos = get_last_videos(uploads = channel_properties['uploads'])
+
+    last_videos_ids = []
+    last_videos_titles = []
+    for video in last_videos:
+        last_videos_ids.append(video['contentDetails']['videoId'])
+        last_videos_titles.append(video['snippet']['title'])
+    last_videos_text = get_last_videos_text(last_videos=last_videos)
 
     channel_text = (f"👤 <code>{channel_properties['title']}</code>\n\n"
                     f"<b>📅 дата создания канала:</b> <code>{channel_properties['creation_date']}</code>\n\n"
@@ -169,9 +182,11 @@ def get_channel_text(channel_properties: dict) -> bool | str:
                     f"\n🖼 <b>аватарка:</b> {channel_properties['profile_picture']}\n\n"
                     f"{channel_properties['description']}")
 
-    return truncate_text(channel_text, 3000)
+    return {'text': truncate_text(channel_text, 3000),
+            'video_ids': last_videos_ids,
+            'video_titles': last_videos_titles}
 
 
 def get_channel_answer(yt_channel_id: str):
-    text = get_channel_text(get_channel_properties(yt_channel_id))
-    return text or LEXICON_RU['not_found_channel']
+    channel_info = get_channel_info(get_channel_properties(yt_channel_id))
+    return channel_info or LEXICON_RU['not_found_channel']

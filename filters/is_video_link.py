@@ -11,6 +11,9 @@ class IsVideoLink(BaseFilter):
             link = link.split('watch?v=')[-1]
             link = link.split('&')[0]
         if len(link) != 11:
+            link = link.split('/shorts/')[-1]
+            link = link.split('&')[0]
+        if len(link) != 11:
             link = link.split('youtu.be/')[-1]
             link = link.split('&')[0]
         if len(link) != 11:

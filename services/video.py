@@ -83,7 +83,7 @@ def get_video_properties(video_id: str) -> bool | dict:
         'channel_title': video['snippet']['channelTitle'],
         'view_count': f"{int(video['statistics']['viewCount']):,}".replace(',', ' '),
         'like_count': f"{int(video['statistics']['likeCount']):,}".replace(',', ' '),
-        'comment_count': f"{int(video['statistics']['commentCount']):,}".replace(',', ' '),
+        'comment_count': f"{int(video['statistics'].get('commentCount', 0)):,}".replace(',', ' '),
         'preview': list(video['snippet']['thumbnails'].values())[-1]['url'],
         'tags': f"<code>{', '.join(video['snippet']['tags'])}</code>" if 'tags' in video['snippet'] else 'не указаны',
         'is_live': 'да' if video['snippet']['liveBroadcastContent'] == 'live' else 'нет',
@@ -111,7 +111,7 @@ def get_video_properties(video_id: str) -> bool | dict:
     return video_properties
 
 
-def get_video_text(video_properties: dict) -> bool | str:
+def get_video_info(video_properties: dict) -> bool | dict[str, str]:
     if not video_properties:
         return False
 
@@ -134,10 +134,12 @@ def get_video_text(video_properties: dict) -> bool | str:
                   f"📂 <b>категория:</b> <code>{video_properties['category']}</code>\n\n"
                   f"📄 <b>описание:</b>\n\n{video_properties['description']}")
 
-    return truncate_text(video_text, 3000)
+    return {'text': truncate_text(video_text, 3000),
+            'channel_id': video_properties['channel_id'],
+            'channel_title': video_properties['channel_title']}
 
 
 def get_video_answer(yt_video_id: str):
-    text = get_video_text(get_video_properties(yt_video_id))
+    video_info = get_video_info(get_video_properties(yt_video_id))
 
-    return text or LEXICON_RU['not_found_video']
+    return video_info or LEXICON_RU['not_found_video']
