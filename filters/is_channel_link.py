@@ -15,7 +15,7 @@ class IsChannelLink(BaseFilter):
             for c in link[1:]:
                 if not c.isalnum() and c not in '-_.':
                     return False
-            return {'yt_channel_id': get_channel_id_from_username(link)}
+            return {'yt_channel_id': get_channel_id_from_username(link[1:])}
 
         if '@' in link:
             link = link.split('@')[-1]
