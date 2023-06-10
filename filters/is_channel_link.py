@@ -25,13 +25,14 @@ class IsChannelLink(BaseFilter):
                     return False
             return {'yt_channel_id': get_channel_id_from_username(link)}
 
-        if 'youtube.com/user' in link:
-            link = link.split('youtube.com/user/')[-1]
-            link = link.split('/')[0]
-            for c in link:
-                if not c.isalnum() and c not in '-_.':
-                    return False
-            return {'yt_channel_id': get_channel_id_from_username(link)}
+        for substr in ('youtube.com/user/', 'youtube.com/c/'):
+            if substr in link:
+                link = link.split(substr)[-1]
+                link = link.split('/')[0]
+                for c in link:
+                    if not c.isalnum() and c not in '-_.':
+                        return False
+                return {'yt_channel_id': get_channel_id_from_username(link)}
 
         link = link.split('youtube.com/channel/')[-1]
         link = link.split('/')[0]

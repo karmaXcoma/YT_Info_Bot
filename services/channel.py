@@ -159,7 +159,7 @@ def get_channel_properties(channel_id: str) -> bool | dict:
         'country': ''
     }
 
-    if 'topicDetails' in channel:
+    if 'topicDetails' in channel and channel['topicDetails']:
         topics_list = ', '.join([YT_TOPICS_ID.get(topic, '') for topic in channel['topicDetails']['topicIds']])
         channel_properties['topics'] = f"📂 <b>категории:</b> <code>{topics_list}</code>\n"
     if channel['snippet']['description']:

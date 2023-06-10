@@ -26,5 +26,6 @@ links = [
         'http://youtube.com/watch?v=InySClFNcPo',
         'https://www.youtube.com/@user-fx1jc7uk2w/about',
         'https://www.youtube.comhttp://youtube.com/watch?v=InySClFNcPo',
-        'https://www.youtube.com/shorts/_Viq2HgGDDw'
+        'https://www.youtube.com/shorts/_Viq2HgGDDw',
+        'https://www.youtube.com/c/PythononPapyrusRU'
     ]
