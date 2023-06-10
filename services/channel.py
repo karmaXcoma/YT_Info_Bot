@@ -117,7 +117,7 @@ def get_additional_info_text(link: str) -> str:
 
     verified_channel = True if r.text.find('BADGE_STYLE_TYPE_VERIFIED') != -1 else False
 
-    verified_artist = True if r.text.find('badge-style-type-verified-artist') != -1 else False
+    verified_artist = True if r.text.find('OFFICIAL_ARTIST_BADGE') != -1 else False
 
     additional_info_text = (f'<b>💸 монетизация:</b> <code>{"да" if monetization else "нет"}</code>\n'
                             f'<b>✅ верификация:</b> <code>{"да" if verified_channel else "нет"}</code>\n'
