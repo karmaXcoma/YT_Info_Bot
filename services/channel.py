@@ -6,7 +6,6 @@ from utils import truncate_text
 from lexicon import LEXICON_RU
 from config import config
 
-
 YT_API_KEY = config.yt_api_key
 
 YT_CHANNEL_API_URL = 'https://www.googleapis.com/youtube/v3/channels'
@@ -110,8 +109,24 @@ def get_last_videos_text(last_videos: list[dict]) -> str:
     return f"{last_videos_title}{''.join(last_videos_units)}\n"
 
 
-def get_channel_properties(channel_id: str) -> bool | dict:
+def get_additional_info_text(link: str) -> str:
+    r = requests.get(url=f'https://{link}')
 
+    monetization = r.text[(monet_pos := r.text.find('is_monetization_enabled","value":"') + 34):monet_pos + 4]
+    monetization = True if monetization == 'true' else False
+
+    verified_channel = True if r.text.find('BADGE_STYLE_TYPE_VERIFIED') != -1 else False
+
+    verified_artist = True if r.text.find('badge-style-type-verified-artist') != -1 else False
+
+    additional_info_text = (f'<b>💸 монетизация:</b> <code>{"да" if monetization else "нет"}</code>\n'
+                            f'<b>✅ верификация:</b> <code>{"да" if verified_channel else "нет"}</code>\n'
+                            f'<b>🎵 канал исполнителя:</b> <code>{"да" if verified_artist else "нет"}</code>\n\n')
+
+    return additional_info_text
+
+
+def get_channel_properties(channel_id: str) -> bool | dict:
     r_channel = requests.get(
         url=YT_CHANNEL_API_URL,
         params={
@@ -148,7 +163,8 @@ def get_channel_properties(channel_id: str) -> bool | dict:
         topics_list = ', '.join([YT_TOPICS_ID.get(topic, '') for topic in channel['topicDetails']['topicIds']])
         channel_properties['topics'] = f"📂 <b>категории:</b> <code>{topics_list}</code>\n"
     if channel['snippet']['description']:
-        channel_description = channel['snippet']['description'].replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
+        channel_description = channel['snippet']['description'].replace('<', '&lt;').replace('>', '&gt;').replace('&',
+                                                                                                                  '&amp;')
         channel_properties['description'] = f"📄 <b>описание канала:</b> \n\n {channel_description}"
     if 'country' in channel['snippet']:
         channel_properties['country'] = f"🌐 <b>страна:</b> <code>{channel['snippet']['country']}</code>\n"
@@ -157,11 +173,10 @@ def get_channel_properties(channel_id: str) -> bool | dict:
 
 
 def get_channel_info(channel_properties: dict) -> bool | dict:
-
     if not channel_properties:
         return False
 
-    last_videos = get_last_videos(uploads = channel_properties['uploads'])
+    last_videos = get_last_videos(uploads=channel_properties['uploads'])
 
     last_videos_ids = []
     last_videos_titles = []
@@ -170,11 +185,14 @@ def get_channel_info(channel_properties: dict) -> bool | dict:
         last_videos_titles.append(video['snippet']['title'])
     last_videos_text = get_last_videos_text(last_videos=last_videos)
 
+    additional_info_text = get_additional_info_text(link=channel_properties['link'])
+
     channel_text = (f"👤 <code>{channel_properties['title']}</code>\n\n"
                     f"<b>📅 дата создания канала:</b> <code>{channel_properties['creation_date']}</code>\n\n"
                     f"👥 <b>подписчиков:</b> <code>{channel_properties['subscriber_count']}</code>\n"
                     f"👁 <b>просмотров:</b> <code>{channel_properties['view_count']}</code>\n"
                     f"🎞 <b>видео:</b> <code>{channel_properties['video_count']}</code>\n\n"
+                    f"{additional_info_text}"
                     f"🔗 <b>ссылка:</b> {channel_properties['link']}\n\n"
                     f"{last_videos_text}"
                     f"{channel_properties['country']}"
